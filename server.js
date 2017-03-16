@@ -19,6 +19,13 @@ const io = socketIO(server);
 app.use(bodyParser.json());
 
 
+app.post('/user/register/operation_team', require('./routes/signup_operation_team'));
+app.post('/user/register/kitchen_team', require('./routes/signup_kitchen_team'));
+// app.post('/user/login', require('./routes/login'));
+
+app.get('/test/insert', require('./playground/test_insert'));
+
+
 server.listen(port, () => {
     console.log(`Server is up on port ${port}`);
 });
