@@ -2,20 +2,29 @@ const jwt = require ('jsonwebtoken');
 const pool = require('./pool');
 
 
-const retrieveCredentials = (username) => {
+const retrieveCredentials = (username, user_type) => {
 
     return new Promise((resolve, reject) => {
-
         let select_string = `
-            SELECT username, password FROM users WHERE username = $1 LIMIT 1;
+            SELECT id, password, firstname FROM users
+            WHERE username = $1
+            AND kitchen_id IS ${(user_type === 'operation_team' ? 'NULL' : 'NOT NULL')}
+            LIMIT 1;
         `;
+
+
 
         pool.query(select_string, [username])
             .then((result) => {
-                resolve(result.rows[0]);
+                
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "no user found"});
+                }
+
+                return resolve(result.rows[0]);
             })
             .catch((error) => {
-                reject(error);
+                reject({error, daoErrMessage: "Fails select_string at retrieveCredentials userDAO.js"});
             });
 
     });
@@ -76,6 +85,8 @@ const insertKtUser = (userObj) => {
     });
 
 };
+
+
 
 
 
