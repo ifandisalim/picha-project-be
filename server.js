@@ -27,6 +27,7 @@ app.post('/user/register/kitchen_team', require('./routes/signup_kitchen_team'))
 app.post('/user/login', require('./routes/login'));
 
 app.get('/kitchen', authenticate, require('./routes/get_kitchen_list'));
+app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen_menu'));
 
 
 app.get('/test/insert', require('./playground/test_insert'));
