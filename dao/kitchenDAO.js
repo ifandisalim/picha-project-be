@@ -39,8 +39,31 @@ const retrieve_kitchen_menu_by_id = (kitchen_id) => {
 };
 
 
+const retrieve_order_preferences = () => {
+    return new Promise((resolve, reject) => {
+        let retrieve_string = `
+            SELECT preference FROM order_preferences
+        `;
+
+        pool.query(retrieve_string)
+            .then(result => {
+                if(result.rows.length < 1){
+                    reject({daoErrMessage: "No preferences found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_order_preferences kitchenDAO.js"});
+            });
+    });
+};
+
+
+
 
 module.exports = {
     retrieve_kitchen_list,
-    retrieve_kitchen_menu_by_id
+    retrieve_kitchen_menu_by_id,
+    retrieve_order_preferences
 };
