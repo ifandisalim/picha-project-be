@@ -15,13 +15,13 @@
         var client = io();
 
         client.on('connect', function(){
-            client.emit('join_kitchen_room', 22, function(error){
+            client.emit('join_operation_room', 19, function(error){
                 if(error){
                     console.log("ERROR", JSON.stringify(error, undefined, 3));
                     return;
                 }
 
-                console.log('Joined kitchen room!');
+                console.log('Joined operation room!');
 
             });
         });
@@ -35,7 +35,6 @@
         client.on('test_message', function(data){
             console.log('Test MEssage ', data);
         });
-
 
     </script>
 </body>

@@ -13,6 +13,7 @@ const port = process.env.PORT || 3001;
 const app = express();
 
 const server = http.createServer(app);
+// Import io and initialze it
 const io = require('./socket').initialize(server);
 
 
@@ -39,7 +40,10 @@ app.get('/order_preferences', authenticate, require('./routes/get_order_preferen
 app.post('/order', authenticate, require('./routes/new_order'));
 
 
-app.get('/test/insert', require('./playground/test_insert'));
+
+//testing
+app.get('/test/socket', require('./listen_socket_events/userEvents'));
+
 
 
 server.listen(port, () => {

@@ -16,7 +16,7 @@ const retrieveCredentials = (username, user_type) => {
 
         pool.query(select_string, [username])
             .then((result) => {
-                
+
                 if(result.rows.length < 1){
                     return reject({daoErrMessage: "no user found"});
                 }
@@ -87,6 +87,38 @@ const insertKtUser = (userObj) => {
 };
 
 
+const retrieve_room_by_user_id = (user_id) => {
+
+    let select_string = `
+        SELECT k.socketio_room
+        FROM kitchen k
+        JOIN users u
+        ON (u.kitchen_id = k.id)
+        WHERE u.id = $1 AND u.kitchen_id IS NOT NULL
+        LIMIT 1
+    `;
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(select_string, [user_id])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No kitchen room found"});
+                }
+
+                resolve(result.rows[0].socketio_room);
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails insert_string at insertKtUser userDAO.js"});
+            });
+
+    });
+
+
+
+};
+
 
 
 
@@ -95,5 +127,6 @@ const insertKtUser = (userObj) => {
 module.exports = {
     retrieveCredentials,
     insertOtUser,
-    insertKtUser
+    insertKtUser,
+    retrieve_room_by_user_id
 };

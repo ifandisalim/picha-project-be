@@ -1,7 +1,7 @@
 const orderDAO      = require('../dao/orderDAO');
 const moment        = require('moment');
 
-const socket        = require('../socket').io();
+const io        = require('../socket').io();
 
 module.exports = (req, res) => {
 
@@ -17,16 +17,7 @@ module.exports = (req, res) => {
         .then((result) => {
 
 
-            // socket.to(socketio_room).emit('new_order',{
-            //     ordered_by_firstname,
-            //     due_datetime,
-            //     socketio_room,
-            //     kitchen_name,
-            //     order_preferences,
-            //     orders
-            // });
-
-            socket.emit('new_order',{
+            io.to(socketio_room).to('operation_team').emit('new_order',{
                 ordered_by_firstname,
                 due_datetime,
                 socketio_room,

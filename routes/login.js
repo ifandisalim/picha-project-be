@@ -24,7 +24,7 @@ module.exports = (req, res) => {
                 }
 
                 var access_token = token.createToken({user_id});
-                return res.send({success: true, access_token, firstname});
+                return res.send({success: true, access_token, firstname, user_id});
             });
         })
         .catch(err => {
