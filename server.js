@@ -29,6 +29,7 @@ app.post('/user/login', require('./routes/login'));
 app.get('/kitchen', authenticate, require('./routes/get_kitchen_list'));
 app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen_menu'));
 app.get('/order_preferences', authenticate, require('./routes/get_order_preferences'));
+app.post('/order', authenticate, require('./routes/new_order'));
 
 
 app.get('/test/insert', require('./playground/test_insert'));
