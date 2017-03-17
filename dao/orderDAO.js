@@ -17,22 +17,12 @@ const insert_order = (order_obj) => {
                 let order_id = result.rows[0].id;
                 let {orders} = order_obj;
 
-                let insert_order_item_string = `INSERT INTO order_items (quantity, menu_id, order_id)
-                    VALUES `;
-
-                // Create insert string for menu_items using loop
-                for(let i=0; i<orders.length; i++){
-                    insert_order_item_string += `(${orders[i].quantity}, ${orders[i].menu_id}, ${order_id}),`;
-                }
-
-                // Remove trailing ,
-                insert_order_item_string = insert_order_item_string.slice(0, -1);
-
-                // Insert menu items of the order
-                pool.query(insert_order_item_string)
-                    .then(result => {
-                        resolve();
+                // Insert individual order items
+                insert_menu_items(orders, order_id)
+                    .then(() => {
+                        resolve({order_id});
                     });
+
             })
             .catch(error =>{
                 reject({error, daoErrMessage: "Fails insert_string at insert_order orderDAO.js"});
@@ -41,6 +31,34 @@ const insert_order = (order_obj) => {
 
 };
 
+// Private function to insert individual order items 
+insert_menu_items = (orders, order_id) => {
+
+    return new Promise((resolve, reject) => {
+
+        let insert_order_item_string = `INSERT INTO order_items (quantity, menu_id, order_id)
+            VALUES `;
+
+        // Create insert string for menu_items using loop
+        for(let i=0; i<orders.length; i++){
+            insert_order_item_string += `(${orders[i].quantity}, ${orders[i].menu_id}, ${order_id}),`;
+        }
+
+        // Remove trailing ,
+        insert_order_item_string = insert_order_item_string.slice(0, -1);
+
+        // Insert menu items of the order
+        pool.query(insert_order_item_string)
+            .then(result => {
+                return resolve();
+            })
+            .catch(error => {
+                return reject({error, daoErrMessage: "Fails insert_order_item_string at insert_menu_items orderDAO.js"});
+            });
+
+    });
+
+};
 
 
 module.exports = {

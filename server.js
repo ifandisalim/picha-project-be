@@ -5,17 +5,24 @@ require('dotenv').config();
 const express       = require('express');
 const bodyParser    = require('body-parser');
 const http          = require('http');
-const socketIO      = require('socket.io');
+const path          = require('path');
 
 
-const port = process.env.PORT || 3000;
+
+const port = process.env.PORT || 3001;
 const app = express();
 
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = require('./socket').initialize(server);
 
 
 
+
+
+
+
+const publicPath = path.join(__dirname, './public');
+app.use(express.static(publicPath));
 app.use(bodyParser.json());
 
 // Custom middlewares
