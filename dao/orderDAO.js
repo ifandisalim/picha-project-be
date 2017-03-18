@@ -289,7 +289,52 @@ const insert_feedback_id_to_order = (feedback_id, order_id) => {
     });
 
 
+};
 
+const retrieve_feedback_id = (order_id) => {
+    return new Promise ((resolve, reject) => {
+
+        let retrieve_feedback_id_string = `
+            SELECT feedback_id
+            FROM orders
+            WHERE id = $1
+        `;
+
+
+
+        pool.query(retrieve_feedback_id_string, [order_id])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback found"});
+                }
+
+                resolve(result.rows[0].feedback_id);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_feedback_id_string at retrieve_feedback_id orderDAO.js"});
+        });
+
+    });
+};
+
+const retrieve_feedback = (feedback_id) => {
+    return new Promise ((resolve, reject) => {
+
+        let retrieve_feedback_string = `
+            SELECT is_positive, comment, input_by_firstname
+            FROM feedback
+            WHERE id = $1
+        `;
+
+
+        pool.query(retrieve_feedback_string, [feedback_id])
+            .then(result => resolve(result.rows[0]))
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_feedback_string at retrieve_feedback orderDAO.js"});
+        });
+
+    });
 
 };
 
@@ -302,5 +347,7 @@ module.exports = {
     retrieve_order_items_by_multiple_id,
     update_order_status,
     insert_order_feedback,
-    insert_feedback_id_to_order
+    insert_feedback_id_to_order,
+    retrieve_feedback_id,
+    retrieve_feedback
 };
