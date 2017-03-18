@@ -76,7 +76,7 @@ const retrieve_order_by_id = (order_id) => {
 };
 
 
-const retrieve_order_by_offset = (offset, isCompleted) => {
+const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
 
 
     return new Promise((resolve, reject) => {
@@ -88,10 +88,13 @@ const retrieve_order_by_offset = (offset, isCompleted) => {
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
-            WHERE o.status ${isCompleted ? " = 'COMPLETED' " : " != 'COMPLETED' " }
+            WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " }
+            ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
             OFFSET $1
             LIMIT 10;
         `;
+
+
 
         pool.query(retrieve_string, [offset])
             .then(result => {

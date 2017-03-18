@@ -39,8 +39,10 @@ app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen
 app.get('/order_preferences', authenticate, require('./routes/get_order_preferences'));
 app.post('/order', authenticate, require('./routes/new_order'));
 app.get('/order/:order_id', authenticate, require('./routes/get_order_by_id'));
-app.get('/order/history/completed/ot/:offset', authenticate, require('./routes/get_completed_history_ot'));
-app.get('/order/history/incomplete/ot/:offset', authenticate, require('./routes/get_incomplete_history_ot'));
+app.get('/order/history/completed/ot/:offset', authenticate, require('./routes/get_completed_history').all_kitcen_history);
+app.get('/order/history/incomplete/ot/:offset', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
+app.get('/order/history/completed/kt/:offset/:kitchen_id', authenticate, require('./routes/get_completed_history').kitchen_history);
+app.get('/order/history/incomplete/kt/:offset/:kitchen_id', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
 
 
 
