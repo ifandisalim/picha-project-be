@@ -12,7 +12,7 @@ const insert_order = (order_obj) => {
         `;
 
         // Insert new Order and get the inserted order id
-        pool.query(insert_string, [ordered_datetime, due_datetime, 'PENDING APPROVAL', total_price, ordered_by_id, kitchen_id, order_preferences ])
+        pool.query(insert_string, [ordered_datetime, due_datetime, 'PENDING ACCEPTANCE', total_price, ordered_by_id, kitchen_id, order_preferences ])
             .then(result => {
                 let order_id = result.rows[0].id;
                 let {orders} = order_obj;
@@ -57,14 +57,14 @@ const retrieve_order_by_id = (order_id) => {
                 let resObj = result.rows[0];
 
 
-                retrieve_order_items(order_id)
+                retrieve_order_items_by_id(order_id)
                     .then(result => {
 
                         resObj.orders = result.orders;
                         return resolve(resObj);
                     })
                     .catch(error => {
-                        return reject({error, daoErrMessage: "Fails at retrieve_order_items kitchenDAO.js"});
+                        return reject({error, daoErrMessage: "Fails at retrieve_order_items_by_id kitchenDAO.js"});
                     });
 
             })
@@ -75,6 +75,44 @@ const retrieve_order_by_id = (order_id) => {
     });
 };
 
+
+const retrieve_order_by_offset = (offset, isCompleted) => {
+
+
+    return new Promise((resolve, reject) => {
+
+        let retrieve_string = `
+            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status
+            FROM orders o
+            JOIN kitchen k
+            ON (o.kitchen_id = k.id)
+            JOIN users u
+            ON (o.ordered_by_id = u.id)
+            WHERE o.status ${isCompleted ? " = 'COMPLETED' " : " != 'COMPLETED' " }
+            OFFSET $1
+            LIMIT 10;
+        `;
+
+        pool.query(retrieve_string, [offset])
+            .then(result => {
+                if(result.rows.length < 1){
+                    reject({daoErrMessage: "No order found"});
+                }
+
+                let order_array = result.rows;
+
+                // Return list of orders limited to 10
+                resolve(order_array);
+
+            })
+            .catch(error =>{
+                console.log('ENTERED FAIELD ORDER');
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_kitchen_menu_by_id kitchenDAO.js"});
+            });
+
+    });
+
+};
 
 
 
@@ -114,7 +152,7 @@ const insert_menu_items = (orders, order_id) => {
 };
 
 
-const retrieve_order_items = (order_id) => {
+const retrieve_order_items_by_id = (order_id) => {
 
     return new Promise((resolve, reject) => {
 
@@ -132,7 +170,7 @@ const retrieve_order_items = (order_id) => {
             .then(result => {
 
                 if(result.rows.length < 1){
-                    console.log('ORDER ITEMS: ', JSON.stringify(result, undefined, 4));
+
 
                     return reject({daoErrMessage: "No order items found with this order id"});
                 }
@@ -141,7 +179,44 @@ const retrieve_order_items = (order_id) => {
                 resolve({orders: result.rows});
             })
             .catch(error => {
-                reject({error, daoErrMessage: "Fails retrieve_order_item_string at retrieve_order_items orderDAO.js"});
+                reject({error, daoErrMessage: "Fails retrieve_order_item_string at retrieve_order_items_by_id orderDAO.js"});
+            });
+
+
+    });
+};
+
+
+const retrieve_order_items_by_multiple_id = (order_ids) => {
+
+    return new Promise((resolve, reject) => {
+
+        let retrieve_order_item_string = `
+            select oi.order_id, m.name as menu_name, oi.quantity
+            from order_items oi
+            join menu m
+            on (oi.menu_id = m.id)
+            where `;
+
+        for(let i=0; i<order_ids.length; i++){
+            retrieve_order_item_string += `oi.order_id = ${order_ids[i]} OR `;
+        }
+
+        retrieve_order_item_string = retrieve_order_item_string.slice(0, -3);
+
+
+        pool.query(retrieve_order_item_string)
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No order items found with these order ids"});
+                }
+
+                // Return all menu order by given array of ids.
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_order_item_string at retrieve_order_items_by_multiple_id orderDAO.js"});
             });
 
 
@@ -152,5 +227,7 @@ const retrieve_order_items = (order_id) => {
 
 module.exports = {
     insert_order,
-    retrieve_order_by_id
+    retrieve_order_by_id,
+    retrieve_order_by_offset,
+    retrieve_order_items_by_multiple_id
 };
