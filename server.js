@@ -37,14 +37,19 @@ app.post('/user/login', require('./routes/login'));
 app.get('/kitchen', authenticate, require('./routes/get_kitchen_list'));
 app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen_menu'));
 app.get('/order_preferences', authenticate, require('./routes/get_order_preferences'));
+
 app.post('/order', authenticate, require('./routes/new_order'));
+app.post('/order/response', authenticate, require('./routes/response_to_order'));
+app.post('/order/feedback', authenticate, require('./routes/insert_order_feedback'));
+
+
 app.get('/order/:order_id', authenticate, require('./routes/get_order_by_id'));
 app.get('/order/history/completed/ot/:offset', authenticate, require('./routes/get_completed_history').all_kitcen_history);
 app.get('/order/history/incomplete/ot/:offset', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
 app.get('/order/history/completed/kt/:offset/:kitchen_id', authenticate, require('./routes/get_completed_history').kitchen_history);
 app.get('/order/history/incomplete/kt/:offset/:kitchen_id', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
 
-app.post('/order/response', authenticate, require('./routes/response_to_order'));
+
 
 
 

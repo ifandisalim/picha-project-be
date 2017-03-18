@@ -243,11 +243,64 @@ const retrieve_order_items_by_multiple_id = (order_ids) => {
 };
 
 
+const insert_order_feedback = (order_id, is_positive, comment, input_by_firstname) => {
+    return new Promise((resolve, reject) => {
+
+        let insert_feedback_string = `
+            INSERT INTO feedback (is_positive, comment, input_by_firstname)
+            VALUES($1, $2, $3)
+            RETURNING ID;
+        `;
+
+
+        pool.query(insert_feedback_string, [is_positive, comment, input_by_firstname])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback id returned"});
+                }
+
+
+                resolve(result.rows[0].id);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails insert_feedback_string at insert_order_feedback orderDAO.js"});
+            });
+
+    });
+};
+
+
+const insert_feedback_id_to_order = (feedback_id, order_id) => {
+
+    return new Promise((resolve, reject) => {
+
+        let insert_feedback_id_string = `
+            UPDATE orders
+            SET feedback_id = $1
+            WHERE id = $2;
+        `;
+
+        pool.query(insert_feedback_id_string, [feedback_id, order_id])
+            .then(() => resolve())
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails insert_feedback_id_string at insert_feedback_id_to_order orderDAO.js"});
+            });
+    });
+
+
+
+
+};
+
+
 
 module.exports = {
     insert_order,
     retrieve_order_by_id,
     retrieve_order_by_offset,
     retrieve_order_items_by_multiple_id,
-    update_order_status
+    update_order_status,
+    insert_order_feedback,
+    insert_feedback_id_to_order
 };
