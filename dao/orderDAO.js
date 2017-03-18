@@ -110,11 +110,27 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             })
             .catch(error =>{
                 console.log('ENTERED FAIELD ORDER');
-                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_kitchen_menu_by_id kitchenDAO.js"});
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_order_by_offset orderDAO.js"});
             });
 
     });
 
+};
+
+const update_order_status = (order_id, status) => {
+    return new Promise((resolve, reject) => {
+
+        let update_status_string = `
+            UPDATE orders
+            SET status = $1
+            WHERE id = $2;
+        `;
+
+        pool.query(update_status_string, [status, order_id])
+            .then(() => resolve())
+            .catch(error => reject({error, daoErrMessage: "Fails update_status_string at update_order_status orderDAO.js"}));
+
+    });
 };
 
 
@@ -232,5 +248,6 @@ module.exports = {
     insert_order,
     retrieve_order_by_id,
     retrieve_order_by_offset,
-    retrieve_order_items_by_multiple_id
+    retrieve_order_items_by_multiple_id,
+    update_order_status
 };

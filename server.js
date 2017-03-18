@@ -44,6 +44,8 @@ app.get('/order/history/incomplete/ot/:offset', authenticate, require('./routes/
 app.get('/order/history/completed/kt/:offset/:kitchen_id', authenticate, require('./routes/get_completed_history').kitchen_history);
 app.get('/order/history/incomplete/kt/:offset/:kitchen_id', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
 
+app.post('/order/response', authenticate, require('./routes/response_to_order'));
+
 
 
 
