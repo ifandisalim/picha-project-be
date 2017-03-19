@@ -1,5 +1,5 @@
 const pool      = require('./pool');
-
+const moment    = require('moment');
 
 
 const insert_order = (order_obj) => {
@@ -339,6 +339,78 @@ const retrieve_feedback = (feedback_id) => {
 };
 
 
+const retrieve_monthly_feedback = (offset) => {
+    return new Promise ((resolve, reject) => {
+
+        var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD HH:mm');
+
+
+        let retrieve_monthly_feedback_string = `
+            SELECT o.id as order_id, f.is_positive, f.comment, f.input_by_firstname
+            FROM orders o
+            JOIN feedback f
+            ON (o.feedback_id = f.id)
+            WHERE due_datetime >= '${last_month}'::date
+            AND due_datetime <= now()::date
+            AND feedback_id IS NOT NULL
+            OFFSET 0
+            LIMIT 10
+        `;
+
+
+
+        pool.query(retrieve_monthly_feedback_string)
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_monthly_feedback_string at retrieve_monthly_feedback orderDAO.js"});
+        });
+
+    });
+
+};
+
+
+const retrieve_monthly_feedback_is_positive = () => {
+
+    return new Promise((resolve, reject) => {
+
+        var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD HH:mm');
+
+        let retrieve_monthly_feedback_is_positive_string = `
+            SELECT f.is_positive
+            FROM feedback f
+            JOIN orders o
+            ON (f.id = o.feedback_id)
+            WHERE due_datetime >= '${last_month}'::date
+            AND due_datetime <= now()::date;
+        `;
+
+        pool.query(retrieve_monthly_feedback_is_positive_string)
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_monthly_feedback_is_positive_string at retrieve_monthly_feedback_is_positive orderDAO.js"});
+        });
+
+
+    });
+
+
+};
+
 
 module.exports = {
     insert_order,
@@ -349,5 +421,7 @@ module.exports = {
     insert_order_feedback,
     insert_feedback_id_to_order,
     retrieve_feedback_id,
-    retrieve_feedback
+    retrieve_feedback,
+    retrieve_monthly_feedback,
+    retrieve_monthly_feedback_is_positive
 };

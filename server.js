@@ -42,6 +42,7 @@ app.post('/order', authenticate, require('./routes/new_order'));
 app.post('/order/response', authenticate, require('./routes/response_to_order'));
 app.post('/order/feedback', authenticate, require('./routes/insert_order_feedback'));
 app.get('/order/feedback/:order_id', authenticate, require('./routes/retrieve_order_feedback'));
+app.get('/order/feedback/monthly/:offset', authenticate, require('./routes/get_all_monthly_feedback'));
 
 
 app.get('/order/:order_id', authenticate, require('./routes/get_order_by_id'));
