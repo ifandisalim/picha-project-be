@@ -1,16 +1,19 @@
 const pg = require('pg');
+const url = require('url');
 
-const dbConfig = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    max: 10,
-    idleTimeoutMillis: 30000
 
+// Parse DB URL into individual params used to create config obj
+const params = url.parse(process.env.DATABASE_URL);
+const auth = params.auth.split(':');
+
+const config = {
+  user: auth[0],
+  password: auth[1],
+  host: params.hostname,
+  port: params.port,
+  database: params.pathname.split('/')[1]
 };
 
-const pool = new pg.Pool(dbConfig);
+const pool = new pg.Pool(config);
 
 module.exports = pool;
