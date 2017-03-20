@@ -34,6 +34,8 @@ app.post('/user/register/operation_team', require('./routes/signup_operation_tea
 app.post('/user/register/kitchen_team', require('./routes/signup_kitchen_team'));
 app.post('/user/login', require('./routes/login'));
 
+app.post('/user/update_push_token', authenticate, require('./routes/update_push_token'));
+
 app.get('/kitchen', authenticate, require('./routes/get_kitchen_list'));
 app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen_menu'));
 app.get('/order_preferences', authenticate, require('./routes/get_order_preferences'));

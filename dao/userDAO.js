@@ -120,6 +120,59 @@ const retrieve_room_by_user_id = (user_id) => {
 };
 
 
+const update_push_token = (user_id, push_token) => {
+
+    let update_push_token_string = `
+        UPDATE users
+        SET push_token = $1
+        WHERE id = $2;
+    `;
+
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(update_push_token_string, [push_token, user_id])
+            .then(result => {
+                resolve();
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails update_push_token_string at update_push_token userDAO.js"});
+            });
+
+    });
+
+
+};
+
+
+
+const retrieve_push_token = (user_id) => {
+    let retrieve_push_token_string = `
+        SELECT push_token
+        FROM users
+        WHERE id = $1
+    `;
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(retrieve_push_token_string, [user_id])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No push token found"});
+                }
+
+                resolve(result.rows[0].push_token);
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_push_token_string at retrieve_push_token userDAO.js"});
+            });
+
+    });
+
+
+};
+
 
 
 
@@ -128,5 +181,8 @@ module.exports = {
     retrieveCredentials,
     insertOtUser,
     insertKtUser,
-    retrieve_room_by_user_id
+    retrieve_room_by_user_id,
+    update_push_token,
+    retrieve_push_token
+
 };

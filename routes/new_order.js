@@ -1,7 +1,12 @@
-const orderDAO      = require('../dao/orderDAO');
-const moment        = require('moment');
+const orderDAO           = require('../dao/orderDAO');
+const moment             = require('moment');
+const ionicPushServer    = require('ionic-push-server');
 
-const io        = require('../socket').io();
+const io = require('../socket').io();
+const pushCredentials = {
+    IonicApplicationId : "50bbc6d4",
+    IonicApplicationAPItoken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMWRlZGQ4Zi05ZjEyLTQ5OTktODg2NC00YjAwY2QwMzYyZmYifQ.GxlIUDv-maoOYg597aDsucVFeMFi2xAl92KG4Su0_E4"
+};
 
 module.exports = (req, res) => {
 
@@ -25,6 +30,12 @@ module.exports = (req, res) => {
                 order_preferences,
                 orders
             });
+
+            // const ionicNotifications = 
+            //
+            // ionicPushServer(credentials, notification);
+
+
 
 
             res.send({success: true});
