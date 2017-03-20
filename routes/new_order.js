@@ -1,14 +1,14 @@
 const orderDAO           = require('../dao/orderDAO');
+const userDAO            = require('../dao/userDAO');
 const moment             = require('moment');
 const ionicPushServer    = require('ionic-push-server');
 
+const notificationCred   = require('../notification');
 const io = require('../socket').io();
-const pushCredentials = {
-    IonicApplicationId : "50bbc6d4",
-    IonicApplicationAPItoken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMWRlZGQ4Zi05ZjEyLTQ5OTktODg2NC00YjAwY2QwMzYyZmYifQ.GxlIUDv-maoOYg597aDsucVFeMFi2xAl92KG4Su0_E4"
-};
 
 module.exports = (req, res) => {
+
+    let user_id = req.user_id;
 
     let order_obj = req.body;
     order_obj.ordered_datetime = moment().format('YYYY-MM-DD HH:mm');
@@ -31,10 +31,29 @@ module.exports = (req, res) => {
                 orders
             });
 
-            // const ionicNotifications = 
-            //
-            // ionicPushServer(credentials, notification);
+            userDAO.retrieve_push_token(kitchen_name)
+                .then(results => {
 
+                    push_tokens = results.map((single_result) => {
+                        return single_result.push_token;
+                    });
+
+                    const ionicNotifications = {
+                        "tokens": push_tokens,
+                        "profile": "dev",
+                        "notification": {
+                            "title": "New Order",
+                            "message": `New order for ${kitchen_name}. Due ${due_datetime}`
+                        }
+
+                    };
+
+                    ionicPushServer(notificationCred.pushCredentials, ionicNotifications);
+
+                })
+                .catch(err => {
+                    res.status(500).send({success:false, errMessage: "Fails at new_order.js userDAO.retrieve_push_token ", error: err });
+                });
 
 
 
