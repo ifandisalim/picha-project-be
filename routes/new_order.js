@@ -14,7 +14,7 @@ module.exports = (req, res) => {
     order_obj.ordered_datetime = moment().format('YYYY-MM-DD HH:mm');
     order_obj.order_preferences = JSON.stringify(order_obj.order_preferences);
 
-    let {ordered_by_firstname, due_datetime, orders, order_preferences, socketio_room, kitchen_name} = req.body;
+    let {ordered_by_firstname, due_datetime, orders, order_preferences, socketio_room, kitchen_name, kitchen_id} = req.body;
 
 
 
@@ -31,7 +31,7 @@ module.exports = (req, res) => {
                 orders
             });
 
-            userDAO.retrieve_push_token(kitchen_name)
+            userDAO.retrieve_push_token(kitchen_id)
                 .then(results => {
 
                     push_tokens = results.map((single_result) => {
