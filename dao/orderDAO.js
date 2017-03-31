@@ -243,17 +243,17 @@ const retrieve_order_items_by_multiple_id = (order_ids) => {
 };
 
 
-const insert_order_feedback = (order_id, is_positive, comment, input_by_firstname) => {
+const insert_order_feedback = (order_id, is_positive, comments, input_by_firstname) => {
     return new Promise((resolve, reject) => {
 
         let insert_feedback_string = `
-            INSERT INTO feedback (is_positive, comment, input_by_firstname)
+            INSERT INTO feedback (is_positive, comments, input_by_firstname)
             VALUES($1, $2, $3)
             RETURNING ID;
         `;
 
 
-        pool.query(insert_feedback_string, [is_positive, comment, input_by_firstname])
+        pool.query(insert_feedback_string, [is_positive, JSON.stringify(comments), input_by_firstname])
             .then(result => {
 
                 if(result.rows.length < 1){
@@ -322,7 +322,7 @@ const retrieve_feedback = (feedback_id) => {
     return new Promise ((resolve, reject) => {
 
         let retrieve_feedback_string = `
-            SELECT is_positive, comment, input_by_firstname
+            SELECT is_positive, comments, input_by_firstname
             FROM feedback
             WHERE id = $1
         `;
@@ -346,7 +346,7 @@ const retrieve_monthly_feedback = (offset) => {
 
 
         let retrieve_monthly_feedback_string = `
-            SELECT o.id as order_id, f.is_positive, f.comment, f.input_by_firstname
+            SELECT o.id as order_id, f.is_positive, f.comments, f.input_by_firstname
             FROM orders o
             JOIN feedback f
             ON (o.feedback_id = f.id)

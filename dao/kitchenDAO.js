@@ -21,7 +21,7 @@ const retrieve_kitchen_list = () => {
 const retrieve_kitchen_menu_by_id = (kitchen_id) => {
     return new Promise((resolve, reject) => {
         let retrieve_string = `
-            SELECT name, price, description, is_vegetarian FROM menu WHERE kitchen_id = $1
+            SELECT id, name, price, description, is_vegetarian FROM menu WHERE kitchen_id = $1
         `;
 
         pool.query(retrieve_string, [kitchen_id])
