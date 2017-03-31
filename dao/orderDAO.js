@@ -82,7 +82,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
     return new Promise((resolve, reject) => {
 
         let retrieve_string = `
-            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status
+            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status, o.feedback_id
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
