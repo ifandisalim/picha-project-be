@@ -38,12 +38,14 @@ const retrieve_order_by_id = (order_id) => {
 
 
         let retrieve_order_string = `
-            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences
+            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, f.is_positive, f.comments
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
+            JOIN feedback f
+            ON (o.feedback_id = f.id)
             WHERE o.id = $1
         `;
 
