@@ -178,7 +178,7 @@ const retrieve_order_items_by_id = (order_id) => {
     return new Promise((resolve, reject) => {
 
         let retrieve_order_item_string = `
-            select m.name as menu_name, oi.quantity
+            select m.name as menu_name, m.price, oi.quantity
             from order_items oi
             join menu m
             on (oi.menu_id = m.id)
