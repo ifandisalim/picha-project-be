@@ -38,7 +38,7 @@ const retrieve_order_by_id = (order_id) => {
 
 
         let retrieve_order_string = `
-            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, f.is_positive, f.comments
+            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, f.is_positive, f.comments, f.input_by_firstname
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
@@ -348,10 +348,12 @@ const retrieve_monthly_feedback = (offset) => {
 
 
         let retrieve_monthly_feedback_string = `
-            SELECT o.id as order_id, f.is_positive, f.comments, f.input_by_firstname
+            SELECT o.id as order_id, o.due_datetime, f.is_positive, f.comments, f.input_by_firstname, k.name as kitchen_name
             FROM orders o
             JOIN feedback f
             ON (o.feedback_id = f.id)
+            JOIN kitchen k
+            ON (k.id = o.kitchen_id)
             WHERE due_datetime >= '${last_month}'::date
             AND due_datetime <= now()::date
             AND feedback_id IS NOT NULL
