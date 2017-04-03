@@ -21,10 +21,15 @@ const io = require('./socket').initialize(server);
 
 
 
-
 const publicPath = path.join(__dirname, './public');
 app.use(express.static(publicPath));
 app.use(bodyParser.json());
+
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, content-type, access_token");
+    next();
+});
 
 // Custom middlewares
 const authenticate = require('./middlewares/authenticate');
@@ -32,6 +37,8 @@ const authenticate = require('./middlewares/authenticate');
 
 app.post('/user/register/operation_team', require('./routes/signup_operation_team'));
 app.post('/user/register/kitchen_team', require('./routes/signup_kitchen_team'));
+app.post('/user/retrieve_id/', require('./routes/get_user_id'));
+app.post('/user/reset_password/', require('./routes/reset_password'));
 app.post('/user/login', require('./routes/login'));
 
 app.post('/user/update_push_token', authenticate, require('./routes/update_push_token'));
@@ -41,7 +48,7 @@ app.get('/kitchen/menu/:kitchen_id', authenticate, require('./routes/get_kitchen
 app.get('/order_preferences', authenticate, require('./routes/get_order_preferences'));
 
 app.post('/order', authenticate, require('./routes/new_order'));
-app.post('/order/response', authenticate, require('./routes/response_to_order'));
+app.post('/order/update_status', authenticate, require('./routes/update_order_status'));
 app.post('/order/feedback', authenticate, require('./routes/insert_order_feedback'));
 app.get('/order/feedback/:order_id', authenticate, require('./routes/retrieve_order_feedback'));
 app.get('/order/feedback/monthly/:offset', authenticate, require('./routes/get_all_monthly_feedback'));

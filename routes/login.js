@@ -16,6 +16,7 @@ module.exports = (req, res) => {
 
             bcrypt.compare(password, retrieved_password, (err, match) => {
                 if(err){
+
                     return res.status(500).send({success: false, errMessage: "Fails at login.js bcrypt.compare", error: err});
                 }
 

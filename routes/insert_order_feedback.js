@@ -4,11 +4,11 @@ const io        = require('../socket').io();
 
 module.exports = (req, res) => {
 
-    let {order_id, is_positive, comment, input_by_firstname} = req.body;
+    let {order_id, is_positive, comments, input_by_firstname} = req.body;
 
 
 
-    orderDAO.insert_order_feedback(order_id, is_positive, comment, input_by_firstname)
+    orderDAO.insert_order_feedback(order_id, is_positive, comments, input_by_firstname)
         .then((feedback_id) => {
 
             orderDAO.insert_feedback_id_to_order(feedback_id, order_id)
