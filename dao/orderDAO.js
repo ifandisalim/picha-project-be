@@ -38,20 +38,19 @@ const retrieve_order_by_id = (order_id) => {
 
 
         let retrieve_order_string = `
-            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, f.is_positive, f.comments, f.input_by_firstname
+            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
-            JOIN feedback f
-            ON (o.feedback_id = f.id)
             WHERE o.id = $1
         `;
 
 
         pool.query(retrieve_order_string, [order_id])
             .then(result => {
+
                 if(result.rows.length < 1){
                     reject({daoErrMessage: "No order found for this id"});
                 }
@@ -63,7 +62,33 @@ const retrieve_order_by_id = (order_id) => {
                     .then(result => {
 
                         resObj.orders = result.orders;
-                        return resolve(resObj);
+                        resObj.is_positive = null;
+                        resObj.comments = null;
+                        resObj.input_by_firstname = null;
+
+                        retrieve_feedback_by_order(order_id)
+                            .then(result => {
+
+
+                                let feedback = result[0];
+                                console.log(feedback);
+
+                                resObj.is_positive = feedback.is_positive;
+                                resObj.comments = feedback.comments;
+                                resObj.input_by_firstname = feedback.input_by_firstname;
+
+                                resolve(resObj);
+                            })
+                            .catch(error => {
+
+                                if(error.daoErrMessage === 'No feedback found'){
+                                    resolve(resObj);
+                                }
+
+                                return reject({error, daoErrMessage: "Fails at retrieve_feedback_by_order kitchenDAO.js"});
+                            });
+
+
                     })
                     .catch(error => {
                         return reject({error, daoErrMessage: "Fails at retrieve_order_items_by_id kitchenDAO.js"});
@@ -71,7 +96,6 @@ const retrieve_order_by_id = (order_id) => {
 
             })
             .catch(error =>{
-                console.log('ENTERED FAIELD ORDER');
                 reject({error, daoErrMessage: "Fails retrieve_string at retrieve_kitchen_menu_by_id kitchenDAO.js"});
             });
     });
@@ -381,6 +405,7 @@ const retrieve_monthly_feedback = (offset) => {
 };
 
 
+
 const retrieve_monthly_feedback_is_positive = () => {
 
     return new Promise((resolve, reject) => {
@@ -411,6 +436,38 @@ const retrieve_monthly_feedback_is_positive = () => {
 
 
     });
+
+
+};
+
+
+const retrieve_feedback_by_order = (order_id) => {
+
+    let select_string = `
+         SELECT f.is_positive, f.comments, f.input_by_firstname
+         FROM feedback f
+         JOIN orders o
+         ON (f.id = o.feedback_id)
+         WHERE o.id = $1
+    `;
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(select_string, [order_id])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails select_string at retrieve_feedback_by_order orderDAO.js"});
+        });
+
+    });
+
 
 
 };
