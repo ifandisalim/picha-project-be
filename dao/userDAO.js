@@ -177,6 +177,56 @@ const retrieve_push_token = (kitchen_id) => {
 };
 
 
+const retrieve_user_id = (username) => {
+
+    let retrieve_string = `
+        SELECT id FROM users
+        WHERE username = $1
+    `;
+
+    return new Promise((resolve, reject) => {
+        pool.query(retrieve_string, [username])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No username found"});
+                }
+                console.log(result);
+                resolve(result.rows[0].id);
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_user_id userDAO.js"});
+            });
+    });
+
+};
+
+
+const resetPassword = (user_id, new_password) => {
+
+    console.log(user_id);
+    console.log(new_password);
+
+    let update_string = `
+        UPDATE users
+        SET password = $1
+        WHERE id = $2
+    `;
+
+
+    return new Promise((resolve, reject) => {
+        pool.query(update_string, [new_password, user_id])
+            .then(result => {
+                resolve();
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails update_string at resetPassword userDAO.js"});
+            });
+    });
+
+};
+
+
 
 
 
@@ -186,6 +236,8 @@ module.exports = {
     insertKtUser,
     retrieve_room_by_user_id,
     update_push_token,
-    retrieve_push_token
+    retrieve_push_token,
+    retrieve_user_id,
+    resetPassword
 
 };
