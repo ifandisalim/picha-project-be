@@ -12,7 +12,8 @@ module.exports = (req, res) => {
         .then(result => {
             let retrieved_password = result.password,
                 user_id            = result.id,
-                firstname          = result.firstname;
+                firstname          = result.firstname,
+                kitchen_id         = (user_type === 'operation_team' ? NULL : result.kitchen_id);
 
             bcrypt.compare(password, retrieved_password, (err, match) => {
                 if(err){
@@ -25,7 +26,7 @@ module.exports = (req, res) => {
                 }
 
                 var access_token = token.createToken({user_id});
-                return res.send({success: true, access_token, firstname, user_id});
+                return res.send({success: true, access_token, firstname, user_id, kitchen_id});
             });
         })
         .catch(err => {
