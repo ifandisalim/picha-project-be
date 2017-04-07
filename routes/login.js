@@ -10,10 +10,11 @@ module.exports = (req, res) => {
 
     userDAO.retrieveCredentials(username, user_type)
         .then(result => {
+            console.log(result);
             let retrieved_password = result.password,
                 user_id            = result.id,
                 firstname          = result.firstname,
-                kitchen_id         = (user_type === 'operation_team' ? NULL : result.kitchen_id);
+                kitchen_id         = (user_type === 'operation_team' ? 'operation_team' : result.kitchen_id);
 
             bcrypt.compare(password, retrieved_password, (err, match) => {
                 if(err){
@@ -30,7 +31,7 @@ module.exports = (req, res) => {
             });
         })
         .catch(err => {
-            res.status(500).send({success:false, errMessage: "Fails at login.js userDAO.insertKtUser ", error: err });
+            res.status(500).send({success:false, errMessage: "Fails at login.js userDAO.retrieveCredentials ", error: err });
         });
 
 };
