@@ -106,7 +106,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
 
 
     return new Promise((resolve, reject) => {
-
+        console.log(kitchen_id);
         let retrieve_string = `
             select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status, o.feedback_id
             FROM orders o
@@ -115,11 +115,11 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             JOIN users u
             ON (o.ordered_by_id = u.id)
             WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " }
+            ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
             ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
             OFFSET $1
             LIMIT 10;
         `;
-
 
 
         pool.query(retrieve_string, [offset])
@@ -137,6 +137,42 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             .catch(error =>{
                 console.log('ENTERED FAIELD ORDER');
                 reject({error, daoErrMessage: "Fails retrieve_string at retrieve_order_by_offset orderDAO.js"});
+            });
+
+    });
+
+};
+
+
+const retrieve_new_kitchen_order = (kitchen_id) => {
+
+    return new Promise((resolve, reject) => {
+        let retrieve_string = `
+            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status, o.feedback_id
+            FROM orders o
+            JOIN kitchen k
+            ON (o.kitchen_id = k.id)
+            JOIN users u
+            ON (o.ordered_by_id = u.id)
+            WHERE o.status = 'PENDING ACCEPTANCE'
+            AND k.id = ${kitchen_id}
+        `;
+
+
+        pool.query(retrieve_string)
+            .then(result => {
+                if(result.rows.length < 1){
+                    reject({daoErrMessage: "No order found"});
+                }
+
+                let order_array = result.rows;
+
+                // Return list of orders limited to 10
+                resolve(order_array);
+
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_new_kitchen_order orderDAO.js"});
             });
 
     });
@@ -484,5 +520,6 @@ module.exports = {
     retrieve_feedback_id,
     retrieve_feedback,
     retrieve_monthly_feedback,
-    retrieve_monthly_feedback_is_positive
+    retrieve_monthly_feedback_is_positive,
+    retrieve_new_kitchen_order
 };

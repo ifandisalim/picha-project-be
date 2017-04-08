@@ -6,7 +6,7 @@ const retrieveCredentials = (username, user_type) => {
 
     return new Promise((resolve, reject) => {
         let select_string = `
-            SELECT id, password, firstname FROM users
+            SELECT id, password, firstname ${user_type === 'operation_team' ? '' : ', kitchen_id'} FROM users
             WHERE username = $1
             AND kitchen_id IS ${(user_type === 'operation_team' ? 'NULL' : 'NOT NULL')}
             LIMIT 1;

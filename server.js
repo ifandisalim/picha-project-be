@@ -25,6 +25,8 @@ const publicPath = path.join(__dirname, './public');
 app.use(express.static(publicPath));
 app.use(bodyParser.json());
 
+// Allow custom headers access_token and Content-Type
+// Allow any origin (So localhost:3000 can request to localhost:3001)
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, content-type, access_token");
@@ -58,7 +60,8 @@ app.get('/order/:order_id', authenticate, require('./routes/get_order_by_id'));
 app.get('/order/history/completed/ot/:offset', authenticate, require('./routes/get_completed_history').all_kitcen_history);
 app.get('/order/history/incomplete/ot/:offset', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
 app.get('/order/history/completed/kt/:offset/:kitchen_id', authenticate, require('./routes/get_completed_history').kitchen_history);
-app.get('/order/history/incomplete/kt/:offset/:kitchen_id', authenticate, require('./routes/get_incomplete_history').all_kitcen_history);
+app.get('/order/history/incomplete/kt/:offset/:kitchen_id', authenticate, require('./routes/get_incomplete_history').kitchen_history);
+app.get('/order/new/:kitchen_id', authenticate, require('./routes/get_new_kitchen_orders'));
 
 
 
