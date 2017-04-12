@@ -29,7 +29,7 @@ module.exports = (req, res) => {
                         firstname = insertResponse.firstname;
                     var access_token = token.createToken({user_id});
 
-                    res.send({success: true, access_token, firstname});
+                    res.send({success: true, access_token, firstname, user_id});
                 })
                 .catch((err) => {
                     res.status(500).send({success:false, errMessage: "Fails at signup_operation_team.js userDAO.insertOtUser ", error: err });

@@ -115,8 +115,10 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             JOIN users u
             ON (o.ordered_by_id = u.id)
             WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " }
+            AND o.status != 'REJECTED'
             ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
             ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
+            ORDER BY o.due_datetime DESC
             OFFSET $1
             LIMIT 10;
         `;
@@ -179,16 +181,17 @@ const retrieve_new_kitchen_order = (kitchen_id) => {
 
 };
 
-const update_order_status = (order_id, status) => {
+const update_order_status = (order_id, status, rejected_reason ) => {
     return new Promise((resolve, reject) => {
 
         let update_status_string = `
             UPDATE orders
-            SET status = $1
-            WHERE id = $2;
+            SET status = $1,
+            rejected_reason = $2
+            WHERE id = $3;
         `;
 
-        pool.query(update_status_string, [status, order_id])
+        pool.query(update_status_string, [status, rejected_reason, order_id])
             .then(() => resolve())
             .catch(error => reject({error, daoErrMessage: "Fails update_status_string at update_order_status orderDAO.js"}));
 

@@ -8,10 +8,11 @@ const notificationCred   = require('../notification');
 module.exports = (req, res) => {
 
     let {order_id, status, kitchen_id} = req.body;
+    let rejected_reason = req.body.rejected_reason || null;
 
 
 
-    orderDAO.update_order_status(order_id, status)
+    orderDAO.update_order_status(order_id, status, rejected_reason)
         .then(() => {
 
             kitchenDAO.retrieve_kitcen_socket_room(kitchen_id)
@@ -44,9 +45,9 @@ module.exports = (req, res) => {
                             ionicPushServer(notificationCred.pushCredentials, ionicNotifications);
 
                         })
-                        // .catch(err => {
-                        //     res.status(500).send({success:false, errMessage: "Fails at new_order.js userDAO.retrieve_push_token ", error: err });
-                        // });
+                        .catch(err => {
+                            res.status(500).send({success:false, errMessage: "Fails at new_order.js userDAO.retrieve_push_token ", error: err });
+                        });
 
 
                     res.send({success: true});
