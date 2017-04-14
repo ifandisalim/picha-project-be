@@ -22,20 +22,23 @@ module.exports = (req, res) => {
         .then((result) => {
 
 
-            io.to(socketio_room).to('operation_team').emit('new_order',{
-                ordered_by_firstname,
-                due_datetime,
-                socketio_room,
-                kitchen_name,
-                order_preferences,
-                orders
-            });
+            // io.to(socketio_room).to('operation_team').emit('new_order',{
+            //     ordered_by_firstname,
+            //     due_datetime,
+            //     socketio_room,
+            //     kitchen_name,
+            //     order_preferences,
+            //     orders
+            // });
 
-            userDAO.retrieve_push_token(kitchen_id)
+            userDAO.retrieve_push_token(kitchen_id, user_id)
                 .then(results => {
 
                     push_tokens = results.map((single_result) => {
                         return single_result.push_token;
+                    })
+                    .filter(push_token => {
+                        return (push_token && push_token !== null && push_token !== '');
                     });
 
                     const ionicNotifications = {
@@ -48,7 +51,10 @@ module.exports = (req, res) => {
 
                     };
 
+
+                    res.send({success: true});
                     ionicPushServer(notificationCred.pushCredentials, ionicNotifications);
+
 
                 })
                 .catch(err => {
@@ -56,8 +62,6 @@ module.exports = (req, res) => {
                 });
 
 
-
-            res.send({success: true});
 
         })
         .catch(err => {

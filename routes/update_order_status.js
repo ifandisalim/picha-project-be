@@ -3,11 +3,16 @@ const kitchenDAO    = require('../dao/kitchenDAO');
 const userDAO       = require('../dao/userDAO');
 const io        = require('../socket').io();
 const ionicPushServer    = require('ionic-push-server');
+const moment        = require('moment');
 
 const notificationCred   = require('../notification');
 module.exports = (req, res) => {
 
-    let {order_id, status, kitchen_id} = req.body;
+    let {order, status, kitchen_id} = req.body;
+    let {order_id, kitchen_name, due_datetime} = order;
+    let moment_datetime = moment(due_datetime);
+    let formatted_datetime = moment_datetime.format('DD MMM YYYY h:mm A');
+    let user_id = req.user_id;
     let rejected_reason = req.body.rejected_reason || null;
 
 
@@ -18,26 +23,35 @@ module.exports = (req, res) => {
             kitchenDAO.retrieve_kitcen_socket_room(kitchen_id)
                 .then((room_name) => {
 
-                    io.to(room_name).to('operation_team').emit('update_order_status',{
-                        order_id,
-                        kitchen_id,
-                        status
-                    });
+                    // io.to(room_name).to('operation_team').emit('update_order_status',{
+                    //     order_id,
+                    //     kitchen_id,
+                    //     status
+                    // });
 
 
-                    userDAO.retrieve_push_token(kitchen_id)
+                    userDAO.retrieve_push_token(kitchen_id,user_id )
                         .then(results => {
 
                             push_tokens = results.map((single_result) => {
                                 return single_result.push_token;
+                            })
+                            .filter(push_token => {
+                                return (push_token && push_token !== null && push_token !== '');
                             });
+
+                            let notificationMessage = (
+                                status !== 'REJECTED' ? 
+                                `Order for ${kitchen_name} at ${formatted_datetime} status changed to ${status} ` 
+                                : `Order for ${kitchen_name} at ${formatted_datetime} status changed to ${status}. Reason: ${rejected_reason}`
+                            );
 
                             const ionicNotifications = {
                                 "tokens": push_tokens,
                                 "profile": "dev",
                                 "notification": {
                                     "title": "Order Status Update",
-                                    "message": `Order ID ${order_id} status changed to ${status}`
+                                    "message": notificationMessage
                                 }
 
                             };

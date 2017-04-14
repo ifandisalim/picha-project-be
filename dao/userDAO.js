@@ -146,7 +146,7 @@ const update_push_token = (user_id, push_token) => {
 
 
 
-const retrieve_push_token = (kitchen_id) => {
+const retrieve_push_token = (kitchen_id, sender_id) => {
 
     let retrieve_push_token_string = `
         SELECT u.push_token, u.firstname
@@ -154,11 +154,12 @@ const retrieve_push_token = (kitchen_id) => {
         LEFT OUTER JOIN kitchen k
         ON (u.kitchen_id = k.id)
         WHERE k.id = $1 OR u.kitchen_id IS NULL
+        AND u.id <> $2
     `;
 
     return new Promise((resolve, reject) => {
 
-        pool.query(retrieve_push_token_string, [kitchen_id])
+        pool.query(retrieve_push_token_string, [kitchen_id, sender_id])
             .then(result => {
 
                 if(result.rows.length < 1){
@@ -175,6 +176,35 @@ const retrieve_push_token = (kitchen_id) => {
 
 
 };
+
+
+const retrieve_all_ot_push_token = (sender_user_id) => {
+
+    let retrieve_push_token_string = `
+        select push_token 
+        from users 
+        where kitchen_id is null
+        AND id <> $1
+    `;
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(retrieve_push_token_string, [sender_user_id])
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No push token found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_push_token_string at retrieve_push_token userDAO.js"});
+            });
+
+    });
+
+}
 
 
 const retrieve_user_id = (username) => {
@@ -237,6 +267,7 @@ module.exports = {
     retrieve_room_by_user_id,
     update_push_token,
     retrieve_push_token,
+    retrieve_all_ot_push_token,
     retrieve_user_id,
     resetPassword
 

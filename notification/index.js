@@ -1,6 +1,6 @@
 const pushCredentials = {
-    IonicApplicationId : "50bbc6d4",
-    IonicApplicationAPItoken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmMWRlZGQ4Zi05ZjEyLTQ5OTktODg2NC00YjAwY2QwMzYyZmYifQ.GxlIUDv-maoOYg597aDsucVFeMFi2xAl92KG4Su0_E4"
+    IonicApplicationId : "ce454bea",
+    IonicApplicationAPItoken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNTRiMWFmYS0yNDUzLTRlMGItODY3Zi1lNTVkNGNhOWZjODkifQ.rJ_GLwbvleaIgwoCXOPM4dLedZK36Uy32HrrvhSGvpw"
 };
 
 module.exports = {
