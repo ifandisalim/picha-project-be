@@ -116,6 +116,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             ON (o.ordered_by_id = u.id)
             WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " }
             AND o.status != 'REJECTED'
+            ${isCompleted ? "" : "AND due_datetime > now()"}
             ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
             ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
             ORDER BY o.due_datetime DESC
@@ -137,13 +138,14 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
 
             })
             .catch(error =>{
-                console.log('ENTERED FAIELD ORDER');
                 reject({error, daoErrMessage: "Fails retrieve_string at retrieve_order_by_offset orderDAO.js"});
             });
 
     });
 
 };
+
+
 
 
 const retrieve_new_kitchen_order = (kitchen_id) => {
@@ -512,6 +514,40 @@ const retrieve_feedback_by_order = (order_id) => {
 };
 
 
+const retrieve_pending_orders = () => {
+
+    let select_string = `
+        SELECT o.due_datetime, u.push_token, o.id as order_id, k.name as kitchen_name
+        FROM users u
+        JOIN kitchen k
+        ON (u.kitchen_id = k.id)
+        JOIN orders o
+        ON (o.kitchen_id = k.id)
+        WHERE o.status = 'PENDING ACCEPTANCE'
+        AND o.due_datetime > now()
+        AND u.kitchen_id = o.kitchen_id
+    `
+
+    return new Promise((resolve, reject) => {
+
+        pool.query(select_string)
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No order found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails select_string at retrieve_feedback_by_order orderDAO.js"});
+        });
+
+    });
+
+}
+
+
 module.exports = {
     insert_order,
     retrieve_order_by_id,
@@ -524,5 +560,6 @@ module.exports = {
     retrieve_feedback,
     retrieve_monthly_feedback,
     retrieve_monthly_feedback_is_positive,
-    retrieve_new_kitchen_order
+    retrieve_new_kitchen_order,
+    retrieve_pending_orders
 };

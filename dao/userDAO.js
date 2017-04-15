@@ -178,18 +178,19 @@ const retrieve_push_token = (kitchen_id, sender_id) => {
 };
 
 
-const retrieve_all_ot_push_token = (sender_user_id) => {
+
+const retrieve_all_ot_push_token = (sender_user_id=null) => {
 
     let retrieve_push_token_string = `
         select push_token 
         from users 
         where kitchen_id is null
-        AND id <> $1
+        ${sender_user_id === null ? '' : 'AND id <>' + sender_user_id}
     `;
 
     return new Promise((resolve, reject) => {
 
-        pool.query(retrieve_push_token_string, [sender_user_id])
+        pool.query(retrieve_push_token_string)
             .then(result => {
 
                 if(result.rows.length < 1){
@@ -205,6 +206,9 @@ const retrieve_all_ot_push_token = (sender_user_id) => {
     });
 
 }
+
+
+
 
 
 const retrieve_user_id = (username) => {

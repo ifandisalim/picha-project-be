@@ -6,7 +6,7 @@ const express       = require('express');
 const bodyParser    = require('body-parser');
 const http          = require('http');
 const path          = require('path');
-
+const moment        = require('moment');
 
 
 const port = process.env.PORT || 3001;
@@ -15,7 +15,9 @@ const app = express();
 const server = http.createServer(app);
 // Import io and initialze it
 const io = require('./socket').initialize(server);
-
+const orderDAO = require('./dao/orderDAO');
+const userDAO = require('./dao/userDAO');
+const scheduler = require('./scheduler');
 
 
 
@@ -32,6 +34,79 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, content-type, access_token");
     next();
 });
+
+
+
+/**
+ * Restarting Cron jobs for reminder of orders
+ */
+orderDAO.retrieve_pending_orders()
+.then(rows => {
+
+    let kt_push_token_by_order = rows.reduce((currObj, row ) => {
+        currObj[row.order_id] = {push_tokens: []} || currObj[row.order_id];
+
+         currObj[row.order_id].push_tokens.push(row.push_token);
+         currObj[row.order_id].due_datetime = row.due_datetime;
+         currObj[row.order_id].kitchen_name = row.kitchen_name;
+         return currObj;
+    }, {});
+
+    userDAO.retrieve_all_ot_push_token()
+    .then(rows2 => {
+
+        let ot_push_tokens = rows2
+        .filter(row =>  row.push_token !== null)
+        .map(row => row.push_token);
+
+        // Loop through orders and reset notification schedule
+        for(let order_id in kt_push_token_by_order){
+
+            let moment_due_datetime = moment(kt_push_token_by_order[order_id].due_datetime),
+                push_tokens = kt_push_token_by_order[order_id].push_tokens.concat(ot_push_tokens),
+                due_datetime = moment_due_datetime.format('D MMM YYYY h:mm A'),
+                kitchen_name = kt_push_token_by_order[order_id].kitchen_name;
+
+
+            let schedule = scheduler.schedule_order_reminder(moment_due_datetime, () => {
+                ionicPushServer(notificationCred.pushCredentials, {
+                    "tokens": push_tokens,
+                    "profile": "dev",
+                    "notification": {
+                        "title": "Reminder",
+                        "message": `Reminder upcoming order for ${kitchen_name}. Due ${due_datetime}`
+                    }
+                });
+                schedule.cancel();
+            });
+
+            let schedule_day_before = scheduler.schedule_day_before_reminder(moment_due_datetime, () => {
+                ionicPushServer(notificationCred.pushCredentials, {
+                    "tokens": push_tokens,
+                    "profile": "dev",
+                    "notification": {
+                        "title": "Reminder",
+                        "message": `Reminder next day order for ${kitchen_name}. Due ${formatted_due_datetime}`
+                    }
+                });
+                schedule_day_before.cancel();
+            });
+
+        }
+
+
+    })
+    .catch(err => {
+        console.log("Error in server.js retrieve_all_ot_push_token");
+        console.log(err);
+    });
+})
+.catch(err => {
+    console.log("Error in server.js retrieve_pending_orders");
+    console.log(err);
+});
+
+
 
 // Custom middlewares
 const authenticate = require('./middlewares/authenticate');

@@ -2,8 +2,8 @@
   "name": "pitcha-project-be",
   "version": "1.0.0",
   "description": "Backend for Pitcha Project internal mobile application",
-  "engines":{
-    "node":"6.9.2"
+  "engines": {
+    "node": "6.9.2"
   },
   "main": "server.js",
   "scripts": {
