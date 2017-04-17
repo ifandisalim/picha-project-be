@@ -85,18 +85,18 @@ const retrieve_order_by_id = (order_id) => {
                                     resolve(resObj);
                                 }
 
-                                return reject({error, daoErrMessage: "Fails at retrieve_feedback_by_order kitchenDAO.js"});
+                                return reject({error, daoErrMessage: "Fails at retrieve_feedback_by_order orderDAO.js"});
                             });
 
 
                     })
                     .catch(error => {
-                        return reject({error, daoErrMessage: "Fails at retrieve_order_items_by_id kitchenDAO.js"});
+                        return reject({error, daoErrMessage: "Fails at retrieve_order_items_by_id orderDAO.js"});
                     });
 
             })
             .catch(error =>{
-                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_kitchen_menu_by_id kitchenDAO.js"});
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_kitchen_menu_by_id orderDAO.js"});
             });
     });
 };
@@ -114,7 +114,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
-            WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " }
+            WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " } 
             AND o.status != 'REJECTED'
             ${isCompleted ? "" : "AND due_datetime > now()"}
             ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
