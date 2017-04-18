@@ -38,7 +38,7 @@ const retrieve_order_by_id = (order_id) => {
 
 
         let retrieve_order_string = `
-            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences
+            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, o.rejected_reason
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
@@ -114,8 +114,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
-            WHERE o.status ${isCompleted ? " = 'PICKED UP' " : " != 'PICKED UP' " } 
-            AND o.status != 'REJECTED'
+            WHERE o.status ${isCompleted ? " = 'PICKED UP'   OR o.status = 'REJECTED' " : " != 'PICKED UP'   AND o.status != 'REJECTED'" } 
             ${isCompleted ? "" : "AND due_datetime > now()"}
             ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
             ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
@@ -152,7 +151,7 @@ const retrieve_new_kitchen_order = (kitchen_id) => {
 
     return new Promise((resolve, reject) => {
         let retrieve_string = `
-            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status, o.feedback_id
+            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime::text, o.status, o.feedback_id
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
@@ -170,14 +169,15 @@ const retrieve_new_kitchen_order = (kitchen_id) => {
                 }
 
                 let order_array = result.rows;
+                console.log(order_array);
 
                 // Return list of orders limited to 10
                 resolve(order_array);
 
             })
-            .catch(error =>{
-                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_new_kitchen_order orderDAO.js"});
-            });
+            // .catch(error =>{
+            //     reject({error, daoErrMessage: "Fails retrieve_string at retrieve_new_kitchen_order orderDAO.js"});
+            // });
 
     });
 
@@ -185,6 +185,10 @@ const retrieve_new_kitchen_order = (kitchen_id) => {
 
 const update_order_status = (order_id, status, rejected_reason ) => {
     return new Promise((resolve, reject) => {
+
+        console.log(order_id);
+        console.log(status);
+        console.log(rejected_reason);
 
         let update_status_string = `
             UPDATE orders
@@ -409,7 +413,8 @@ const retrieve_feedback = (feedback_id) => {
 const retrieve_monthly_feedback = (offset) => {
     return new Promise ((resolve, reject) => {
 
-        var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD HH:mm');
+        var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD');
+        var today = moment().add(1, 'days').format('YYYY-MM-DD');
 
 
         let retrieve_monthly_feedback_string = `
@@ -420,7 +425,7 @@ const retrieve_monthly_feedback = (offset) => {
             JOIN kitchen k
             ON (k.id = o.kitchen_id)
             WHERE due_datetime >= '${last_month}'::date
-            AND due_datetime <= now()::date
+            AND due_datetime < '${today}'::date
             AND feedback_id IS NOT NULL
             OFFSET 0
             LIMIT 10
@@ -432,6 +437,7 @@ const retrieve_monthly_feedback = (offset) => {
             .then(result => {
 
                 if(result.rows.length < 1){
+                    console.log('less than 1');
                     return reject({daoErrMessage: "No feedback found"});
                 }
 
@@ -452,6 +458,7 @@ const retrieve_monthly_feedback_is_positive = () => {
     return new Promise((resolve, reject) => {
 
         var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD HH:mm');
+        var today = moment().add(1, 'days').format('YYYY-MM-DD');
 
         let retrieve_monthly_feedback_is_positive_string = `
             SELECT f.is_positive
@@ -459,14 +466,14 @@ const retrieve_monthly_feedback_is_positive = () => {
             JOIN orders o
             ON (f.id = o.feedback_id)
             WHERE due_datetime >= '${last_month}'::date
-            AND due_datetime <= now()::date;
+            AND due_datetime < '${today}'::date;
         `;
 
         pool.query(retrieve_monthly_feedback_is_positive_string)
             .then(result => {
 
                 if(result.rows.length < 1){
-                    return reject({daoErrMessage: "No feedback found"});
+                    return resolve([]);
                 }
 
                 resolve(result.rows);

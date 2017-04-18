@@ -48,7 +48,10 @@ module.exports = (req, res) => {
             orderDAO.retrieve_order_items_by_multiple_id(order_ids)
                 .then(order_items => {
 
+
+
                     let orders_with_order_items = assign_order_items_to_orders(order_items, orders);
+
 
                     res.send({success: true, order_history: orders_with_order_items});
                     // return resolve(resObj);
