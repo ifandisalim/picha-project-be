@@ -38,7 +38,7 @@ const retrieve_order_by_id = (order_id) => {
 
 
         let retrieve_order_string = `
-            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.preferences, o.rejected_reason
+            select k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime::text, o.preferences, o.rejected_reason
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
@@ -108,7 +108,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
     return new Promise((resolve, reject) => {
         console.log(kitchen_id);
         let retrieve_string = `
-            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime, o.status, o.feedback_id
+            select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime::text, o.status, o.feedback_id
             FROM orders o
             JOIN kitchen k
             ON (o.kitchen_id = k.id)
@@ -418,7 +418,7 @@ const retrieve_monthly_feedback = (offset) => {
 
 
         let retrieve_monthly_feedback_string = `
-            SELECT o.id as order_id, o.due_datetime, f.is_positive, f.comments, f.input_by_firstname, k.name as kitchen_name
+            SELECT o.id as order_id, o.due_datetime::text, f.is_positive, f.comments, f.input_by_firstname, k.name as kitchen_name
             FROM orders o
             JOIN feedback f
             ON (o.feedback_id = f.id)
@@ -524,7 +524,7 @@ const retrieve_feedback_by_order = (order_id) => {
 const retrieve_pending_orders = () => {
 
     let select_string = `
-        SELECT o.due_datetime, u.push_token, o.id as order_id, k.name as kitchen_name
+        SELECT o.due_datetime::text, u.push_token, o.id as order_id, k.name as kitchen_name
         FROM users u
         JOIN kitchen k
         ON (u.kitchen_id = k.id)
