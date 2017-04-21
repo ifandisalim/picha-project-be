@@ -23,13 +23,6 @@ module.exports = (req, res) => {
             kitchenDAO.retrieve_kitcen_socket_room(kitchen_id)
                 .then((room_name) => {
 
-                    // io.to(room_name).to('operation_team').emit('update_order_status',{
-                    //     order_id,
-                    //     kitchen_id,
-                    //     status
-                    // });
-
-
                     userDAO.retrieve_push_token(kitchen_id,user_id )
                         .then(results => {
 

@@ -145,7 +145,16 @@ const update_push_token = (user_id, push_token) => {
 };
 
 
-
+/**
+ * Function to retrieve push_token, firstname
+ * of all KT users with kitchen_id and OT users
+ * result does not include row where user id = sender_id
+ * Returns 
+ * [
+ *  {push_token, first_name},
+ *  {push_token, first_name},
+ * ]
+ */
 const retrieve_push_token = (kitchen_id, sender_id) => {
 
     let retrieve_push_token_string = `
@@ -178,6 +187,14 @@ const retrieve_push_token = (kitchen_id, sender_id) => {
 };
 
 
+/**
+ * Function to retrieve push tokens and firstname 
+ * of all KT users with kitchen_id and all OT users
+ * return
+ * [
+ *  {push_token, firstname}
+ * ]
+ */
 const retrieve_push_token_reminder = (kitchen_id) => {
 
     let retrieve_push_token_string = `
@@ -256,7 +273,6 @@ const retrieve_user_id = (username) => {
                 if(result.rows.length < 1){
                     return reject({daoErrMessage: "No username found"});
                 }
-                console.log(result);
                 resolve(result.rows[0].id);
             })
             .catch(error =>{
@@ -269,8 +285,6 @@ const retrieve_user_id = (username) => {
 
 const resetPassword = (user_id, new_password) => {
 
-    console.log(user_id);
-    console.log(new_password);
 
     let update_string = `
         UPDATE users

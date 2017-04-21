@@ -2,6 +2,16 @@ const pool      = require('./pool');
 const moment    = require('moment');
 
 
+/**
+ * Function to insert a new order onto database 
+ * Arguments: 
+ *      1. {ordered_datetime, due_datetime, status, total_price, ordered_by_id, kitchen_id, order_preferences}
+ * 
+ * Return a promise:
+ *      1. {order_id} on resolve()
+ *      2. {error, daoErrMessage} fron reject()
+ *          error property is err obj from DB
+ */
 const insert_order = (order_obj) => {
     let {ordered_datetime, due_datetime, status, total_price, ordered_by_id, kitchen_id, order_preferences} = order_obj;
 
@@ -71,7 +81,6 @@ const retrieve_order_by_id = (order_id) => {
 
 
                                 let feedback = result[0];
-                                console.log(feedback);
 
                                 resObj.is_positive = feedback.is_positive;
                                 resObj.comments = feedback.comments;
@@ -106,7 +115,6 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
 
 
     return new Promise((resolve, reject) => {
-        console.log(kitchen_id);
         let retrieve_string = `
             select o.id as order_id, k.name as kitchen_name, u.firstname as ordered_by_firstname, o.due_datetime::text, o.status, o.feedback_id
             FROM orders o
@@ -169,26 +177,34 @@ const retrieve_new_kitchen_order = (kitchen_id) => {
                 }
 
                 let order_array = result.rows;
-                console.log(order_array);
 
                 // Return list of orders limited to 10
                 resolve(order_array);
 
             })
-            // .catch(error =>{
-            //     reject({error, daoErrMessage: "Fails retrieve_string at retrieve_new_kitchen_order orderDAO.js"});
-            // });
+            .catch(error =>{
+                reject({error, daoErrMessage: "Fails retrieve_string at retrieve_new_kitchen_order orderDAO.js"});
+            });
 
     });
 
 };
 
+
+/**
+ * Function to update order status in DB
+ * Arguments: 
+ *      1. order_id
+ *      2. new status
+ *      3. rejected_reason 
+ * 
+ * Returns Promise:
+ *      1. no return when resolve()
+ *      2. {error, daoErrMessage: string} on reject()
+ *          error property is an err object from DB
+ */
 const update_order_status = (order_id, status, rejected_reason ) => {
     return new Promise((resolve, reject) => {
-
-        console.log(order_id);
-        console.log(status);
-        console.log(rejected_reason);
 
         let update_status_string = `
             UPDATE orders
@@ -201,6 +217,38 @@ const update_order_status = (order_id, status, rejected_reason ) => {
             .then(() => resolve())
             .catch(error => reject({error, daoErrMessage: "Fails update_status_string at update_order_status orderDAO.js"}));
 
+    });
+};
+
+
+/**
+ * Function to retrieve order_status from DB
+ * Arguments: 
+ *      1. order_id of order to retrieve
+ * 
+ * Return Promise:
+ *      1. status:string on resolve()
+ *      2. {error, daoErrMessage: string} on reject()
+ *          error property is an err object from DB
+ */
+const retrieve_order_status = (order_id) => {
+    return new Promise((resolve, reject) => {
+        let retrieve_status_string = `
+            SELECT status
+            FROM ORDERS
+            WHERE id = $1
+        `;
+
+        pool.query(retrieve_status_string, [order_id])
+            .then(result => {
+                if(result.rows.length < 1){
+                    reject({daoErrMessage: "No status found"});
+                }
+
+                resolve(result.rows[0].status);
+
+            })
+            .catch(error => reject({error, daoErrMessage: "Fails update_status_string at update_order_status orderDAO.js"}));
     });
 };
 
@@ -437,7 +485,6 @@ const retrieve_monthly_feedback = (offset) => {
             .then(result => {
 
                 if(result.rows.length < 1){
-                    console.log('less than 1');
                     return reject({daoErrMessage: "No feedback found"});
                 }
 
@@ -521,7 +568,15 @@ const retrieve_feedback_by_order = (order_id) => {
 };
 
 
-const retrieve_pending_orders = () => {
+/**
+ * Function to retrieve ongoing orders, whichdue date is greater than current moment.
+ * Ongoing orders means status != PENDING ACCEPTANCE status != PICKED UP
+ * Argument: none
+ * Returns a promise:
+ *      1. [{due_datetime, push_token, order_id, kitchen_name}] on resolve()
+ *      2. {errpr, daoErrMessage} on reject();
+ */
+const retrieve_ongoing_orders = () => {
 
     let select_string = `
         SELECT o.due_datetime::text, u.push_token, o.id as order_id, k.name as kitchen_name
@@ -530,7 +585,7 @@ const retrieve_pending_orders = () => {
         ON (u.kitchen_id = k.id)
         JOIN orders o
         ON (o.kitchen_id = k.id)
-        WHERE o.status = 'PENDING ACCEPTANCE'
+        WHERE o.status <> 'PENDING ACCEPTANCE' AND o.status <> 'PICKED UP'
         AND o.due_datetime > now()
         AND u.kitchen_id = o.kitchen_id
     `
@@ -561,6 +616,7 @@ module.exports = {
     retrieve_order_by_offset,
     retrieve_order_items_by_multiple_id,
     update_order_status,
+    retrieve_order_status,
     insert_order_feedback,
     insert_feedback_id_to_order,
     retrieve_feedback_id,
@@ -568,5 +624,6 @@ module.exports = {
     retrieve_monthly_feedback,
     retrieve_monthly_feedback_is_positive,
     retrieve_new_kitchen_order,
-    retrieve_pending_orders
+    retrieve_ongoing_orders
+    
 };

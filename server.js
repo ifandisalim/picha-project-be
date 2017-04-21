@@ -18,6 +18,7 @@ const io = require('./socket').initialize(server);
 const orderDAO = require('./dao/orderDAO');
 const userDAO = require('./dao/userDAO');
 const scheduler = require('./scheduler');
+const notification   = require('./notification');
 
 
 
@@ -40,57 +41,73 @@ app.use(function(req, res, next) {
 /**
  * Restarting Cron jobs for reminder of orders
  */
-orderDAO.retrieve_pending_orders()
-.then(rows => {
-
-    let kt_push_token_by_order = rows.reduce((currObj, row ) => {
-        currObj[row.order_id] = {push_tokens: []} || currObj[row.order_id];
-
-         currObj[row.order_id].push_tokens.push(row.push_token);
-         currObj[row.order_id].due_datetime = row.due_datetime;
-         currObj[row.order_id].kitchen_name = row.kitchen_name;
-         return currObj;
-    }, {});
+orderDAO.retrieve_ongoing_orders()
+.then(ongoing_order_rows => {
+    let ongoing_orders = map_ongoing_orders(ongoing_order_rows);
 
     userDAO.retrieve_all_ot_push_token()
-    .then(rows2 => {
+    .then(ot_push_token_rows => {
 
-        let ot_push_tokens = rows2
-        .filter(row =>  row.push_token !== null)
-        .map(row => row.push_token);
+        let ot_push_tokens = reduce_push_tokens(ot_push_token_rows);
 
         // Loop through orders and reset notification schedule
-        for(let order_id in kt_push_token_by_order){
+        for(let order_id in ongoing_orders){
 
-            let moment_due_datetime = moment(kt_push_token_by_order[order_id].due_datetime),
-                push_tokens = kt_push_token_by_order[order_id].push_tokens.concat(ot_push_tokens),
-                due_datetime = moment_due_datetime.format('D MMM YYYY h:mm A'),
-                kitchen_name = kt_push_token_by_order[order_id].kitchen_name;
+            let moment_due_datetime = moment(ongoing_orders[order_id].due_datetime),
+                push_tokens = ongoing_orders[order_id].push_tokens.concat(ot_push_tokens),
+                formatted_due_datetime = moment_due_datetime.format('D MMM YYYY h:mm A'),
+                kitchen_name = ongoing_orders[order_id].kitchen_name;
 
 
-            let schedule = scheduler.schedule_order_reminder(moment_due_datetime, () => {
-                ionicPushServer(notificationCred.pushCredentials, {
-                    "tokens": push_tokens,
-                    "profile": "dev",
-                    "notification": {
-                        "title": "Reminder",
-                        "message": `Reminder upcoming order for ${kitchen_name}. Due ${due_datetime}`
-                    }
+                // Schedule for notification 15 minutes after
+                let post_due_reminder_msg = `15 minutes passed for order ${kitchen_name}. Due ${formatted_due_datetime}. Order is not set to picked up yet.`;
+                const post_due_notification = notification.construct(push_tokens, "Time is up!", post_due_reminder_msg);
+
+                let schedule_post_due = scheduler.shcedule_post_order_reminder(moment_due_datetime, () => {
+                            orderDAO.retrieve_order_status(order_id)
+                            .then(status => {
+                                if(status !== 'PICKED UP'){
+                                    schedule.cancel();
+                                    return;
+                                }
+                                
+                            ionicPushServer(notification.pushCredentials, post_due_notification);
+                            schedule_post_due.cancel();
+                            });
+
                 });
-                schedule.cancel();
-            });
 
-            let schedule_day_before = scheduler.schedule_day_before_reminder(moment_due_datetime, () => {
-                ionicPushServer(notificationCred.pushCredentials, {
-                    "tokens": push_tokens,
-                    "profile": "dev",
-                    "notification": {
-                        "title": "Reminder",
-                        "message": `Reminder next day order for ${kitchen_name}. Due ${formatted_due_datetime}`
-                    }
+                // Schedule for notification 15 minutes before
+                let pre_due_reminder_msg = `Reminder upcoming order for ${kitchen_name}. Due in 15 minutes`;
+                const pre_due_notification = notification.construct(push_tokens, "Reminder", pre_due_reminder_msg);
+                let schedule_pre_due = scheduler.schedule_pre_order_reminder(moment_due_datetime, () => {
+                    ionicPushServer(notification.pushCredentials, pre_due_notification);
+                    schedule_pre_due.cancel();
                 });
-                schedule_day_before.cancel();
-            });
+
+                // Schedule for notification day before at 15:00
+                let day_before_reminder_msg = `Reminder next day order for ${kitchen_name}. Due ${formatted_due_datetime}`;
+                const day_before_notification = notification.construct(push_tokens, "Reminder", day_before_reminder_msg);
+
+                let schedule_day_before = scheduler.schedule_day_before_reminder(moment_due_datetime, () => {
+                    ionicPushServer(notification.pushCredentials, day_before_notification);
+                    schedule_day_before.cancel();
+                });
+
+
+
+
+            // let schedule_day_before = scheduler.schedule_day_before_reminder(moment_due_datetime, () => {
+            //     ionicPushServer(notification.pushCredentials, {
+            //         "tokens": push_tokens,
+            //         "profile": "dev",
+            //         "notification": {
+            //             "title": "Reminder",
+            //             "message": `Reminder next day order for ${kitchen_name}. Due ${formatted_due_datetime}`
+            //         }
+            //     });
+            //     schedule_day_before.cancel();
+            // });
 
         }
 
@@ -105,6 +122,46 @@ orderDAO.retrieve_pending_orders()
     console.log("Error in server.js retrieve_pending_orders");
     console.log(err);
 });
+
+
+/**
+ * Function to map rows returned from DB by their order id
+ * Argument: 
+ *      1. Rows from DB [{due_datetime, push_token, order_id, kitchen_name}]
+ * 
+ * Return:
+ *      Object whose keys are order id 
+ *      {173: {push_tokens: [], due_datetime, kitchen_name}, 174:{...}}
+ */
+const map_ongoing_orders = (db_rows) => {
+
+    return db_rows.reduce((currObj, row ) => {
+        currObj[row.order_id] = {push_tokens: []} || currObj[row.order_id];
+
+         currObj[row.order_id].push_tokens.push(row.push_token);
+         currObj[row.order_id].due_datetime = row.due_datetime;
+         currObj[row.order_id].kitchen_name = row.kitchen_name;
+         return currObj;
+    }, {});
+
+}
+
+
+/**
+ * Function to remove any null push tokens from DB rows
+ * and reduce them into a single array of string
+ * Argument:
+ *      1. Rows from DB [{push_token}, {push_token}]
+ * 
+ * Return:
+ *      Array of push tokens string
+ *      [push1, push2]
+ */
+const reduce_push_tokens = (db_rows) => {
+    return db_rows
+    .filter(row =>  row.push_token !== null)
+    .map(row => row.push_token);
+}
 
 
 
