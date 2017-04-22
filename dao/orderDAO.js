@@ -122,7 +122,7 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             ON (o.kitchen_id = k.id)
             JOIN users u
             ON (o.ordered_by_id = u.id)
-            WHERE o.status ${isCompleted ? " = 'PICKED UP'   OR o.status = 'REJECTED' " : " != 'PICKED UP'   AND o.status != 'REJECTED'" } 
+            WHERE (o.status ${isCompleted ? " = 'PICKED UP'   OR o.status = 'REJECTED' " : " != 'PICKED UP'   AND o.status != 'REJECTED'" } )
             ${isCompleted ? "" : "AND due_datetime > now()"}
             ${kitchen_id ? "AND o.status != 'PENDING ACCEPTANCE'": ""}
             ${kitchen_id ?  "AND k.id ="+kitchen_id : ""}
@@ -130,7 +130,6 @@ const retrieve_order_by_offset = (offset, isCompleted, kitchen_id) => {
             OFFSET $1
             LIMIT 10;
         `;
-
 
         pool.query(retrieve_string, [offset])
             .then(result => {
