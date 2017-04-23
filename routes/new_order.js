@@ -16,7 +16,8 @@ module.exports = (req, res) => {
     order_obj.order_preferences = JSON.stringify(order_obj.order_preferences);
 
     let {ordered_by_firstname, due_datetime, orders, order_preferences, socketio_room, kitchen_name, kitchen_id} = req.body;
-    let moment_due_datetime = moment(due_datetime)
+
+    let moment_due_datetime = moment(due_datetime);
     let formatted_due_datetime = moment_due_datetime.format('D MMM YYYY h:mm A');
 
 
@@ -54,8 +55,8 @@ module.exports = (req, res) => {
                             let schedule_post_due = scheduler.shcedule_post_order_reminder(moment_due_datetime, () => {
                                         orderDAO.retrieve_order_status(order_id)
                                         .then(status => {
-                                            if(status !== 'PICKED UP'){
-                                                schedule.cancel();
+                                            if(status === 'PICKED UP'){
+                                                schedule_post_due.cancel();
                                                 return;
                                             }
                                             
@@ -66,7 +67,7 @@ module.exports = (req, res) => {
 
 
                             // Schedule for notification 15 minutes before
-                            let pre_due_reminder_msg = `Reminder order for ${kitchen_name}. Due in 15 minutes`;
+                            let pre_due_reminder_msg = `Reminder order for ${kitchen_name}. There is an order due in 15 minutes. Please check ongoing orders.`;
                             const pre_due_notification = notification.construct(push_tokens, "Reminder", pre_due_reminder_msg);
                             let schedule_pre_due = scheduler.schedule_pre_order_reminder(moment_due_datetime, () => {
                                 ionicPushServer(notification.pushCredentials, pre_due_notification);

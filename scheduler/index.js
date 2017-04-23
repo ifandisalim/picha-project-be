@@ -12,7 +12,10 @@ const moment = require('moment');
  */
 const schedule_pre_order_reminder = (moment_date, callback) => {
 
-	let reminder_date = moment_date.subtract(15, 'minutes');
+	let due_date = moment(moment_date);
+	let reminder_date = due_date.subtract(15, 'minutes');
+
+
 
 	if(reminder_date.isBefore(moment())){
 		return false;
@@ -38,7 +41,8 @@ const schedule_pre_order_reminder = (moment_date, callback) => {
  * 	Return Schedule object from scheduleJob()
  */
 const shcedule_post_order_reminder = (moment_date, callback) => {
-	let reminder_date = moment_date.add(15, 'minutes');
+	let due_date = moment(moment_date);
+	let reminder_date = due_date.add(15, 'minutes');
 
 	if(reminder_date.isBefore(moment())){
 		return false;
@@ -65,11 +69,12 @@ const shcedule_post_order_reminder = (moment_date, callback) => {
  */
 const schedule_day_before_reminder = (moment_date, callback) => {
 
-	let day = moment_date.get('date') - 1,
-			month = moment_date.get('month') + 1,
-			year = moment_date.get('year'),
-			hour = moment_date.get('hour'),
-			minute = moment_date.get('minute');
+	let due_date = moment(moment_date);
+	let day = due_date.get('date') - 1,
+			month = due_date.get('month') + 1,
+			year = due_date.get('year'),
+			hour = due_date.get('hour'),
+			minute = due_date.get('minute');
 
 	let day_before_moment_date = moment(`${year}-${month}-${day} 15:00`, `YYYY-M-D HH:mm`);
 

@@ -78,7 +78,7 @@ orderDAO.retrieve_ongoing_orders()
                 });
 
                 // Schedule for notification 15 minutes before
-                let pre_due_reminder_msg = `Reminder upcoming order for ${kitchen_name}. Due in 15 minutes`;
+                let pre_due_reminder_msg = `Reminder upcoming order for ${kitchen_name}. There is an order due in 15 minutes. Please check ongoing orders.`;
                 const pre_due_notification = notification.construct(push_tokens, "Reminder", pre_due_reminder_msg);
                 let schedule_pre_due = scheduler.schedule_pre_order_reminder(moment_due_datetime, () => {
                     ionicPushServer(notification.pushCredentials, pre_due_notification);
@@ -93,21 +93,6 @@ orderDAO.retrieve_ongoing_orders()
                     ionicPushServer(notification.pushCredentials, day_before_notification);
                     schedule_day_before.cancel();
                 });
-
-
-
-
-            // let schedule_day_before = scheduler.schedule_day_before_reminder(moment_due_datetime, () => {
-            //     ionicPushServer(notification.pushCredentials, {
-            //         "tokens": push_tokens,
-            //         "profile": "dev",
-            //         "notification": {
-            //             "title": "Reminder",
-            //             "message": `Reminder next day order for ${kitchen_name}. Due ${formatted_due_datetime}`
-            //         }
-            //     });
-            //     schedule_day_before.cancel();
-            // });
 
         }
 
