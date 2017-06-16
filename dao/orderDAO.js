@@ -474,7 +474,7 @@ const retrieve_monthly_feedback = (offset) => {
             WHERE due_datetime >= '${last_month}'::date
             AND due_datetime < '${today}'::date
             AND feedback_id IS NOT NULL
-            OFFSET 0
+            OFFSET ${offset}
             LIMIT 10
         `;
 
@@ -495,6 +495,48 @@ const retrieve_monthly_feedback = (offset) => {
 
     });
 
+};
+
+
+
+const retrieve_monthly_feedback_kt = (offset, kitchen_id) => {
+    return new Promise ((resolve, reject) => {
+
+        var last_month = moment().subtract(30, 'days').format('YYYY-MM-DD');
+        var today = moment().add(1, 'days').format('YYYY-MM-DD');
+
+
+        let retrieve_monthly_feedback_string = `
+            SELECT o.id as order_id, o.due_datetime::text, f.is_positive, f.comments, f.input_by_firstname, k.name as kitchen_name
+            FROM orders o
+            JOIN feedback f
+            ON (o.feedback_id = f.id)
+            JOIN kitchen k
+            ON (k.id = o.kitchen_id)
+            WHERE due_datetime >= '${last_month}'::date
+            AND due_datetime < '${today}'::date
+            AND feedback_id IS NOT NULL
+            AND o.kitchen_id = ${kitchen_id}
+            OFFSET ${offset}
+            LIMIT 10
+        `;
+
+
+
+        pool.query(retrieve_monthly_feedback_string)
+            .then(result => {
+
+                if(result.rows.length < 1){
+                    return reject({daoErrMessage: "No feedback found"});
+                }
+
+                resolve(result.rows);
+            })
+            .catch(error => {
+                reject({error, daoErrMessage: "Fails retrieve_monthly_feedback_string at retrieve_monthly_feedback_kt orderDAO.js"});
+            });
+
+    });
 };
 
 
@@ -621,8 +663,8 @@ module.exports = {
     retrieve_feedback_id,
     retrieve_feedback,
     retrieve_monthly_feedback,
+    retrieve_monthly_feedback_kt,
     retrieve_monthly_feedback_is_positive,
     retrieve_new_kitchen_order,
     retrieve_ongoing_orders
-    
 };
