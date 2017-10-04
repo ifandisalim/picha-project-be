@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Socket IO Client Mock</title>
+</head>
+<body>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+
+        var client = io();
+
+        client.on('connect', function(){
+            client.emit('join_operation_room', 19, function(error){
+                if(error){
+                    console.log("ERROR", JSON.stringify(error, undefined, 3));
+                    return;
+                }
+
+                console.log('Joined operation room!');
+
+            });
+        });
+
+
+
+        client.on('new_order', function(data){
+            console.log('new_order event emitted. Data: ', data);
+        });
+
+        client.on('update_order_status', function(data){
+            console.log('Order status updated. This is operation', JSON.stringify(data, undefined, 3));
+        });
+
+        client.on('test_message', function(data){
+            console.log('Test MEssage ', data);
+        });
+
+    </script>
+</body>
+</html>

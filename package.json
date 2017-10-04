@@ -2,11 +2,27 @@
   "name": "pitcha-project-be",
   "version": "1.0.0",
   "description": "Backend for Pitcha Project internal mobile application",
+  "engines": {
+    "node": "6.9.2"
+  },
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "author": "ifandi",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "axios": "0.15.3",
+    "bcryptjs": "2.4.3",
+    "body-parser": "1.17.1",
+    "dotenv": "4.0.0",
+    "express": "4.15.2",
+    "ionic-push-server": "1.1.1",
+    "jsonwebtoken": "7.3.0",
+    "moment": "2.17.1",
+    "node-schedule": "1.2.1",
+    "pg": "6.1.4",
+    "socket.io": "1.7.3"
+  }
 }
